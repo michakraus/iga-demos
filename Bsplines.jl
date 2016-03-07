@@ -13,6 +13,5 @@ include("functions/baseextension.jl")
 include("functions/knotvector.jl")
 include("functions/bsplinebasisfuns.jl")
 include("functions/knotrefinement.jl")
-include("functions/quadrature.jl")
 
 end

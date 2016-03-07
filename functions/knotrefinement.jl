@@ -187,7 +187,7 @@ function degreeelevationoperator(p::Integer,knots::Array{Float64,1},t::Integer)
     xa = p+1-multun[1]; xb = p+1-multun[end]
     multun[1] = multun[end] = p+1                   # update knot multiplicity
     knots = buildvector(knotsun,multun)             # new knotvector
-    ph = p+t; ph2 = int(floor(ph/2))                # new degree
+    ph = p+t; ph2 = round(Int,floor(ph/2))                # new degree
     newknots = buildvector(knotsun,multun+t)
 
     # B-spline decomposition into Bezier elements
@@ -219,8 +219,8 @@ function degreeelevationoperator(p::Integer,knots::Array{Float64,1},t::Integer)
     # Compose Bezier degree elevation matrix
     B = spzeros(numbez*ph+1,numbez*p+1)
     for k in 1:numbez
-       row = [1:ph+1] + (k-1)*ph
-       col = [1:p+1]  + (k-1)*p
+       row = collect(1:ph+1) + (k-1)*ph
+       col = collect(1:p+1)  + (k-1)*p
        B[row,col] = bezalfs
     end
 
