@@ -6,7 +6,7 @@ export dimsplinespace, grevillepoints, plottable, buildvector
 
 using PyPlot
 import PyPlot.plot
-include("functions/BaseExtension.jl")
+include("functions/baseextension.jl")
 include("functions/knotvector.jl")
 include("functions/bsplinebasisfuns.jl")
 include("functions/knotrefinement.jl")
