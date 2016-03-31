@@ -313,7 +313,7 @@ function dersbsplinebasisfunsinterpolationmatrix(p::Int, kts::Vector{Float64}, u
     Nu = dersbsplinebasisfuns(p, kts, span, u, nout)
 
     # indices sparse matrix format
-    I = repmat([1:m]',p+1,1)
+    I = repmat(collect(1:m)',p+1,1)
     J = Int64[span[i]-p-1+j for j in 1:p+1, i in 1:m]
     
     # return matrixes
