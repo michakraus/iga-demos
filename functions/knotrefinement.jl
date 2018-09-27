@@ -6,7 +6,7 @@
 #       knotinsertionoperator()    -  compute matrix operator from coarse space to h-refined space
 #       degreeelevationoperator()  -  compute matrix operator from coarse space to p-refined space
 #       bezierdecompoperator()     -  compute bezier extraction operator
-#       
+#
 #########################################################################################################################################
 #
 # File part of the Julia IsoGeometric Analysis toolbox
@@ -16,26 +16,28 @@
 #########################################################################################################################################
 
 
-# insert a single knot into knotvector kts and output the transformation operator from the coarse to the refined space
-function knotinsertionoperator!(n::Integer,p::Integer,kts::Vector{Float64},span::Integer,u::Float64)
-# input:
-#    n     :: Int              -  dimension of the spline space
-#    p     :: Int              -  polynomial degree
-#    kts   :: Vector{Float64}  -  the initial knotvector
-#    span  :: Int              -  knot span index of new knot 'u' in 'kts'
-#    u     :: Float64          -  knot to insert
-#
-# output:
-#    C     :: Matrix{Float64}  -  transformation matrix from dofs coarse space to dofs refined space
-#                                 (knotvector is updated in-place)
+"""
+insert a single knot into knotvector kts and output the transformation operator from the coarse to the refined space
 
+## input:
+    n     :: Int              -  dimension of the spline space
+    p     :: Int              -  polynomial degree
+    kts   :: Vector{Float64}  -  the initial knotvector
+    span  :: Int              -  knot span index of new knot 'u' in 'kts'
+    u     :: Float64          -  knot to insert
+
+## output:
+    C     :: Matrix{Float64}  -  transformation matrix from dofs coarse space to dofs refined space
+                                 (knotvector is updated in-place)
+"""
+function knotinsertionoperator!(n::Integer,p::Integer,kts::Vector{Float64},span::Integer,u::Float64)
     # allocate space for temporary refinement operator
     C = zeros(Float64,n+1,n)
 
     # Initialize temporary refinement operator
     inda = 1:span-p; indb = span-p+1:n
-    C[inda,inda]   = eye(Float64,length(inda))
-    C[indb+1,indb] = eye(Float64,length(indb))
+    C[inda,inda]    = Matrix{Float64}(I, length(inda), length(inda))
+    C[indb.+1,indb] = Matrix{Float64}(I, length(indb), length(indb))
 
     for j in 1:p
        # determine factor of affine map
@@ -59,24 +61,26 @@ function knotinsertionoperator(n::Integer,p::Integer,kts::Vector{Float64},span::
 end
 
 
-# insert a multiple knots into knotvector kts and output the transformation operator from the coarse to the refined space
-function knotinsertionoperator!(p::Int,kts::Vector{Float64},u::Vector{Float64})
-# input:
-#    p     :: Int              -  polynomial degree
-#    kts   :: Vector{Float64}  -  the initial knotvector
-#    u     :: Vector{Float64}  -  vector of knots to insert
-#
-# output:
-#    C     :: Matrix{Float64}  -  transformation matrix from dofs coarse space to dofs refined space
-#                                 (knotvector is updated in-place)
+"""
+insert a multiple knots into knotvector kts and output the transformation operator from the coarse to the refined space
 
+## input:
+    p     :: Int              -  polynomial degree
+    kts   :: Vector{Float64}  -  the initial knotvector
+    u     :: Vector{Float64}  -  vector of knots to insert
+
+## output:
+    C     :: Matrix{Float64}  -  transformation matrix from dofs coarse space to dofs refined space
+                                 (knotvector is updated in-place)
+"""
+function knotinsertionoperator!(p::Int,kts::Vector{Float64},u::Vector{Float64})
     # dimension spline space
     n = dimsplinespace(p,kts)
     r = length(u)
 
     # initialize knot insertion matrix
     C = zeros(Float64,n+r,n)
-    C[1:n,1:n] = eye(n,n)
+    C[1:n,1:n] = Matrix{Float64}(I, n, n)
 
     # loop over refinement vector u
     for i in 1:r
@@ -96,7 +100,8 @@ function knotinsertionoperator!(p::Int,kts::Vector{Float64},u::Vector{Float64})
     return C
 end
 
-# same as above function, however, returns a copy of the updated knotvector
+
+"same as knotinsertionoperator!, however, returns a copy of the updated knotvector"
 function knotinsertionoperator(p::Int,kts::Vector{Float64},u::Vector{Float64})
     newkts = copy(kts)
     C = knotinsertionoperator!(p, newkts, u)
@@ -104,15 +109,17 @@ function knotinsertionoperator(p::Int,kts::Vector{Float64},u::Vector{Float64})
 end
 
 
+"""
+compute bezier extraction operator
 
+## input:
+    p     :: Int              -  polynomial degree
+    kts   :: Vector{Float64}  -  the initial knotvector
+
+## output:
+    C     :: Array{Float64,3}  -  3D array; C[:,:,k] denotes the kth Bezier decomp operator
+"""
 function bezierdecompoperator(p::Int,kts::Vector{Float64})
-# input:
-#    p     :: Int              -  polynomial degree
-#    kts   :: Vector{Float64}  -  the initial knotvector
-#
-# output:
-#    C     :: Array{Float64,3}  -  3D array; C[:,:,k] denotes the kth Bezier decomp operator
-    
     # Initialization:
     a = p+1
     b = a+1
@@ -120,10 +127,10 @@ function bezierdecompoperator(p::Int,kts::Vector{Float64})
     m = length(kts)
     alphas = zeros(p-1)
     C = zeros(p+1,p+1,m-2*p)
-    C[:,:,1] = eye(p+1)
+    C[:,:,1] = Matrix(I, p+1, p+1)
 
     while(b<m)
-        C[:,:,nb+1] = eye(p+1)  # Initialize the next extraction operator.
+        C[:,:,nb+1] = Matrix(I, p+1, p+1)  # Initialize the next extraction operator.
         i = b
 
         # compute knot multiplicity
@@ -156,7 +163,7 @@ function bezierdecompoperator(p::Int,kts::Vector{Float64})
                 end
             end
         end
-        
+
         # initialize next operator
         if b<m
             a = b
@@ -169,17 +176,20 @@ function bezierdecompoperator(p::Int,kts::Vector{Float64})
 end
 
 
-# compute degree elevation operator from a basis with degree 'p' to a basis with degree 'p+t'
-function degreeelevationoperator(p::Integer,knots::Array{Float64,1},t::Integer)
-# input:
-#    p     :: Int              -  polynomial degree
-#    kts   :: Vector{Float64}  -  the initial knotvector
-#    t     :: Int              -  raise the degree with 't'
-# output:
-#    C     :: Matrix{Float64}  -  3D array; C[:,:,k] denotes the kth Bezier decomp operator
-#    newknots :: Vector{Float64} - the updated knotvector
-#    ph       :: Int             - the updated degree 'ph = p + t'
+"""
+compute degree elevation operator from a basis with degree 'p' to a basis with degree 'p+t'
 
+## input:
+    p     :: Int              -  polynomial degree
+    kts   :: Vector{Float64}  -  the initial knotvector
+    t     :: Int              -  raise the degree with 't'
+
+## output:
+    C     :: Matrix{Float64}  -  3D array; C[:,:,k] denotes the kth Bezier decomp operator
+    newknots :: Vector{Float64} - the updated knotvector
+    ph       :: Int             - the updated degree 'ph = p + t'
+"""
+function degreeelevationoperator(p::Integer,knots::Array{Float64,1},t::Integer)
     # initialize
     (knotsun,multun,inda,indc) = uniqueknots(knots)
 
@@ -188,11 +198,11 @@ function degreeelevationoperator(p::Integer,knots::Array{Float64,1},t::Integer)
     multun[1] = multun[end] = p+1                   # update knot multiplicity
     knots = buildvector(knotsun,multun)             # new knotvector
     ph = p+t; ph2 = round(Int,floor(ph/2))                # new degree
-    newknots = buildvector(knotsun,multun+t)
+    newknots = buildvector(knotsun,multun.+t)
 
     # B-spline decomposition into Bezier elements
     numbez = length(knotsun) - 1
-    alpha = p - multun; alpha[1] = alpha[end] = 0
+    alpha = p .- multun; alpha[1] = alpha[end] = 0
     insertknots = buildvector(knotsun,alpha)
     (A,Ubez) = knotinsertionoperator(p,knots,insertknots)
 
@@ -219,20 +229,26 @@ function degreeelevationoperator(p::Integer,knots::Array{Float64,1},t::Integer)
     # Compose Bezier degree elevation matrix
     B = spzeros(numbez*ph+1,numbez*p+1)
     for k in 1:numbez
-       row = collect(1:ph+1) + (k-1)*ph
-       col = collect(1:p+1)  + (k-1)*p
+       row = collect(1:ph+1) .+ (k-1)*ph
+       col = collect(1:p+1)  .+ (k-1)*p
        B[row,col] = bezalfs
     end
 
     # B-spline composition from Bezier elements
     (Z,Ubez) = knotinsertionoperator(ph,newknots,insertknots)
-    L = cholfact(Z'*Z); C = spzeros(size(L,2),size(Z,1))
+    L = cholesky(Z'*Z)
+    C = spzeros(size(L,2),size(Z,1))
     for i in 1:size(Z,1)
-        C[:,i] = (L \ full(Z[i,:]'))
+        # TODO Check for correctness!
+        C[:,i] = L \ Z[i,:]
     end
 
     # Degree elevation matrix
-    temp = C * B * A; (row,col) = findnz(temp .> 10e-15)
+    temp = C * B * A
+    (row,col) = begin
+        I = findall(x -> x > 10e-15, temp)
+        (getindex.(I, 1), getindex.(I, 2))
+    end
     D = zeros(size(temp,1),size(temp,2))
     [D[row[i],col[i]] = temp[row[i],col[i]] for i in 1:length(row)]
     index = xa+1:length(newknots)-ph-xb

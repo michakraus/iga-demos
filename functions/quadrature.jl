@@ -4,11 +4,11 @@
 #
 # Types:
 #       QuadRule               - object that stores n quadrature points and weights on the interval [-1,1]
-#                                 
+#
 # Functions:
 #       dim()                  - determine the order of the quadrature rule
-#       
-#      
+#
+#
 #########################################################################################################################################
 #
 # File part of the Julia IsoGeometric Analysis toolbox
@@ -18,23 +18,27 @@
 #########################################################################################################################################
 
 
-# container for quadrature formula
-type QuadRule
+"container for quadrature formula"
+struct QuadRule
     points  :: Vector{Float64}
     weights :: Vector{Float64}
 end
 
-# order of the quadrature rule - number of quadrature points
+"order of the quadrature rule - number of quadrature points"
 dim(qr::QuadRule) = length(qr.points)
 
-# compute an 'n'-point Gausian integration rule of type 'method' on the interval [-1,1]
+"""
+compute an 'n'-point Gausian integration rule of type 'method' on the interval [-1,1]
+
+## input:
+    n       :: Int             - number of quadrature points
+    method  :: String          - choose among the following methods: "legendre", "lobatto", "chebyshev", "hermite", "jacobi", #                                 "radau". If left blank then the standard is "legendre"
+
+## output:
+    u       :: Vector{Float64} - quadrature points
+    w       :: Vector{Float64} - quadrature weights
+"""
 function QuadRule(n::Int,method="legendre")
-# input:
-#    n       :: Int             - number of quadrature points
-#    method  :: String          - choose among the following methods: "legendre", "lobatto", "chebyshev", "hermite", "jacobi", #                                 "radau". If left blank then the standard is "legendre"
-# output:
-#    u       :: Vector{Float64} - quadrature points
-#    w       :: Vector{Float64} - quadrature weights
 
     if method=="legendre"
         u, w = gausslegendre(n)
@@ -51,6 +55,6 @@ function QuadRule(n::Int,method="legendre")
     else
         error("Not a valid quadrature method")
     end
-    
+
     return QuadRule(u,w)
 end

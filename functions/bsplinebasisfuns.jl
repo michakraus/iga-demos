@@ -19,35 +19,44 @@
 #
 #########################################################################################################################################
 
-# compute the dimension of the spline space defined by degree 'p' and knotsvector 'kts'
+"""
+compute the dimension of the spline space defined by degree 'p' and knotsvector 'kts'
+
+## input:
+    p   :: Int             - polynomial degree
+    kts :: Vector{Float64} - knotvector
+
+## output:
+    n   :: Int             - dimension of the splinespace
+"""
 dimsplinespace(p::Integer,kts::Vector{Float64}) = length(kts)-p-1
-# input:
-#    p   :: Int             - polynomial degree
-#    kts :: Vector{Float64} - knotvector
-# output:
-#    n   :: Int             - dimension of the splinespace
 
 
-# compute the Greville Absiscae of the spline space defined by degree 'p' and knotvector 'kts'
+"""
+compute the Greville Absiscae of the spline space defined by degree 'p' and knotvector 'kts'
+
+## input:
+    p   :: Int             - polynomial degree
+    kts :: Vector{Float64} - knotvector
+
+## output:
+    y   :: Vector{Float64} - vector with Greville Absiscae
+"""
 grevillepoints(p::Integer,kts::Array{Float64,1}) = [sum(kts[j+1:j+p]) / p for j in 1:length(kts)-p-1]
-# input:
-#    p   :: Int             - polynomial degree
-#    kts :: Vector{Float64} - knotvector
-# output:
-#    y   :: Vector{Float64} - vector with Greville Absiscae
 
 
+"""
+compute value of a single B-spline basis-function of degree 'p' with local knotvector 'knots' evaluated at point 'u'
 
-# compute value of a single B-spline basis-function of degree 'p' with local knotvector 'knots' evaluated at point 'u'
+## input:
+    p     :: Int             - polynomial degree
+    knots :: Vector{Float64} - knotvector
+    u     :: Float64         - evaluation point
+
+## output:
+    b     :: Float64         - basisfunction defined by degree 'p' and local knotvector 'knots' evaluated at point 'u'
+"""
 function onebasisfuneval(p::Integer,kts::Vector{Float64},u::Float64)
-# input:
-#    p     :: Int             - polynomial degree
-#    knots :: Vector{Float64} - knotvector
-#    u     :: Float64         - evaluation point
-#
-# Output: 
-#    b     :: Float64         - basisfunction defined by degree 'p' and local knotvector 'knots' evaluated at point 'u'
-
     # initialize
     funs = zeros(Float64,p+1)
 
@@ -91,28 +100,34 @@ function onebasisfuneval(p::Integer,kts::Vector{Float64},u::Float64)
 end
 
 
-# compute value of a single B-spline basis-function of degree 'p' with local knotvector 'knots' evaluated at points 'u'
+"""
+compute value of a single B-spline basis-function of degree 'p' with local knotvector 'knots' evaluated at points 'u'
+
+## input:
+    p     :: Int             - polynomial degree
+    knots :: Vector{Float64} - knotvector
+    u     :: Vector{Float64} - vector with evaluation points
+
+## output:
+    b     :: Vector{Float64} - basisfunction defined by degree 'p' and local knotvector 'knots' evaluated at points 'u'
+"""
 onebasisfuneval(p::Integer,kts::Vector{Float64},u::Vector{Float64}) = Float64[onebasisfuneval(p,kts,u[i]) for i in 1:length(u)]
-# input:
-#    p     :: Int             - polynomial degree
-#    knots :: Vector{Float64} - knotvector
-#    u     :: Vector{Float64} - vector with evaluation points
-#
-# Output: 
-#    b     :: Vector{Float64} - basisfunction defined by degree 'p' and local knotvector 'knots' evaluated at points 'u'
 
 
-# Compute triangular table of the nonvanishing b-spline basisfunctions up to degree 'p' at the site 'u' and their corresponding support
+"""
+Compute triangular table of the nonvanishing b-spline basisfunctions up to degree 'p' at the site 'u' and their corresponding support
+
+## input:
+    p     :: Int             - polynomial degree
+    kts   :: Vector{Float64} - knotvector
+    span  :: Int             - index of point u in knotvector
+    u     :: Float64         - evaluation point
+
+## output:
+    Nu    :: Matrix{Float64} - Triangular table of basis functions - Nu[:,k] denotes the kth order basis
+    supp  :: Matrix{Float64} - Triangular table of the support of the basis functions - supp[:,k] denotes the support of the kth order basis
+"""
 function bsplinebasiseval(p::Integer, knots::Vector{Float64}, span::Integer, u::Float64)
-# input:
-#    p     :: Int             - polynomial degree
-#    kts   :: Vector{Float64} - knotvector
-#    span  :: Int             - index of point u in knotvector 
-#    u     :: Float64         - evaluation point
-# output:
-#    Nu    :: Matrix{Float64} - Triangular table of basis functions - Nu[:,k] denotes the kth order basis
-#    supp  :: Matrix{Float64} - Triangular table of the support of the basis functions - supp[:,k] denotes the support of the kth order basis 
-
     # initialize
     supp = zeros(Float64,p+1,p+1); supp[1,1] = knots[span+1] - knots[span]
     funs = zeros(Float64,p+1,p+1); funs[1,1] = 1
@@ -136,30 +151,36 @@ function bsplinebasiseval(p::Integer, knots::Vector{Float64}, span::Integer, u::
     return funs, supp
 end
 
-# Compute triangular table of the nonvanishing b-spline basisfunctions up to degree 'p' at the site 'u' and their corresponding support
+"""
+Compute triangular table of the nonvanishing b-spline basisfunctions up to degree 'p' at the site 'u' and their corresponding support
+
+## input:
+    p     :: Int             - polynomial degree
+    knots :: Vector{Float64} - knotvector
+    u     :: Float64         - evaluation point
+
+## output:
+    Nu    :: Matrix{Float64} - Triangular table of basis functions - Nu[:,k] denotes the kth order basis
+    supp  :: Matrix{Float64} - Triangular table of the support of the basis functions - supp[:,k] denotes the support of the
+                               kth order basis
+"""
 bsplinebasiseval(p::Integer,kts::Vector{Float64},u::Float64) = bsplinebasiseval(p,kts,findspan(p,kts,u),u)
-# input:
-#    p     :: Int             - polynomial degree
-#    knots :: Vector{Float64} - knotvector
-#    u     :: Float64         - evaluation point
-#
-# output:
-#    Nu    :: Matrix{Float64} - Triangular table of basis functions - Nu[:,k] denotes the kth order basis
-#    supp  :: Matrix{Float64} - Triangular table of the support of the basis functions - supp[:,k] denotes the support of the
-#                               kth order basis 
 
-# compute the nonvanishing B-spline basis-functions of degree 'p' and its '1,2,...,nout-1'th order derivatives at the site 'u'
+"""
+compute the nonvanishing B-spline basis-functions of degree 'p' and its '1,2,...,nout-1'th order derivatives at the site 'u'
+
+## input:
+    p     :: Int             - polynomial degree
+    kts   :: Vector{Float64} - knotvector
+    i     :: Int             - index of point u in knotvector
+    u     :: Float64         - evaluation point
+    nout  :: Int             - number of outputs
+
+## output:
+    ders  :: Matrix{Float64} - [B(u); B'(u); B''(u) ... ] where B(u) denote the vector of B-spline basis functions evaluated
+                               at u
+"""
 function dersbsplinebasisfuns(p::Degree, kts::KnotVector, i::Int, u::Float64, nout::Int)
-# input:
-#    p     :: Int             - polynomial degree
-#    kts   :: Vector{Float64} - knotvector
-#    i     :: Int             - index of point u in knotvector 
-#    u     :: Float64         - evaluation point
-#    nout  :: Int             - number of outputs
-# Output: 
-#    ders  :: Matrix{Float64} - [B(u); B'(u); B''(u) ... ] where B(u) denote the vector of B-spline basis functions evaluated 
-#                               at u
-
     # initialize
     n = dimsplinespace(p,kts)
 
@@ -184,7 +205,7 @@ function dersbsplinebasisfuns(p::Degree, kts::KnotVector, i::Int, u::Float64, no
         end
         ndu[j+1,j+1] = saved;
     end
-    
+
     # load the basisfunctions
     ders = zeros(Float64,nout,p+1)
     ders[1,:] = ndu[:,end]'
@@ -203,19 +224,19 @@ function dersbsplinebasisfuns(p::Degree, kts::KnotVector, i::Int, u::Float64, no
                 a[s2+1,1] = a[s1+1,1] / ndu[pk+2,rk+1]
                 d = a[s2+1,1] * ndu[rk+1,pk+1]
             end
-            
-            if (rk >= -1) 
+
+            if (rk >= -1)
                 j1 = 1
             else
                 j1 = -rk
             end
-            
+
             if (r-1 <= pk)
                 j2 = k-1
             else
                 j2 = p-r
             end
-            
+
             for j in j1:j2
                 a[s2+1,j+1] = (a[s1+1,j+1] - a[s1+1,j]) / ndu[pk+2,rk+j+1]
                 d = d + a[s2+1,j+1] * ndu[rk+j+1,pk+1]
@@ -242,31 +263,36 @@ function dersbsplinebasisfuns(p::Degree, kts::KnotVector, i::Int, u::Float64, no
     return ders
 end
 
+"""
+compute B-spline basis-functions of degree 'p' and its '1,2,...,nout-1'th order derivatives at the site 'u'
 
-# compute B-spline basis-functions of degree 'p' and its '1,2,...,nout-1'th order derivatives at the site 'u'
+## input:
+    p     :: Int             - polynomial degree
+    kts   :: Vector{Float64} - knotvector
+    u     :: Float64         - evaluation point
+    nout  :: Int             - number of outputs
+
+## output:
+    ders  :: Matrix{Float64} - [B(u); B'(u); B''(u) ... ] where B(u) denote the vector of B-spline basis functions evaluated
+                               at u
+"""
 dersbsplinebasisfuns(p::Degree,kts::KnotVector,u::Float64,nout::Int) = dersbsplinebasisfuns(p, kts, findspan(p,kts,u), u, nout)
-# input:
-#    p     :: Int             - polynomial degree
-#    kts   :: Vector{Float64} - knotvector
-#    u     :: Float64         - evaluation point
-#    nout  :: Int             - number of outputs
-# Output: 
-#    ders  :: Matrix{Float64} - [B(u); B'(u); B''(u) ... ] where B(u) denote the vector of B-spline basis functions evaluated 
-#                               at u
 
+"""
+compute B-spline basis-functions of degree 'p' and its '1,2,...,nout-1'th order derivatives at the vector of sites 'u'
 
-# compute B-spline basis-functions of degree 'p' and its '1,2,...,nout-1'th order derivatives at the vector of sites 'u'
+## input:
+    p     :: Int             - polynomial degree
+    kts   :: Vector{Float64} - knotvector
+    span  :: Vector{Int}     - vector knot-span-index of points u in knotvector
+    u     :: Vector{Float64} - vector with evaluation points
+    nout  :: Int             - number of outputs
+
+## output:
+    ders  :: Vector{Matrix{Float64}} - [B(u); B'(u); B''(u) ... ] where B(u) denote the vector of B-spline basis functions
+                                       evaluated at the vector of sites u
+"""
 function dersbsplinebasisfuns(p::Int, kts::Vector{Float64}, span::Vector{Int64}, u::Vector{Float64}, nout::Int)
-# input:
-#    p     :: Int             - polynomial degree
-#    kts   :: Vector{Float64} - knotvector
-#    span  :: Vector{Int}     - vector knot-span-index of points u in knotvector 
-#    u     :: Vector{Float64} - vector with evaluation points
-#    nout  :: Int             - number of outputs
-# Output: 
-#    ders  :: Vector{Matrix{Float64}} - [B(u); B'(u); B''(u) ... ] where B(u) denote the vector of B-spline basis functions 
-#                                       evaluated at the vector of sites u 
-
     # dimension Spline space and number of collocation points
     n = dimsplinespace(p,kts)
     m = length(u)
@@ -278,36 +304,43 @@ function dersbsplinebasisfuns(p::Int, kts::Vector{Float64}, span::Vector{Int64},
         ders = dersbsplinebasisfuns(p, kts, span[i], u[i], nout)
         [Nu[k][i,:] = ders[k,:] for k in 1:nout]
     end
+
     return Nu
 end
 
-# compute B-spline basis-functions of degree 'p' and its '1,2,...,nout-1'th order derivatives at the vector of sites 'u'
+"""
+compute B-spline basis-functions of degree 'p' and its '1,2,...,nout-1'th order derivatives at the vector of sites 'u'
+
+## input:
+    p     :: Int             - polynomial degree
+    kts   :: Vector{Float64} - knotvector
+    u     :: Vector{Float64} - vector with evaluation points
+    nout  :: Int             - number of outputs
+
+## output:
+    ders  :: Vector{Matrix{Float64}} - [B(u); B'(u); B''(u) ... ] where B(u) denote the vector of B-spline basis functions
+                                       evaluated at the vector of sites u
+"""
 dersbsplinebasisfuns(p::Int, kts::Vector{Float64}, u::Vector{Float64}, nout::Int) = dersbsplinebasisfuns(p, kts, findspan(p,kts,u), u, nout)
-# input:
-#    p     :: Int             - polynomial degree
-#    kts   :: Vector{Float64} - knotvector
-#    u     :: Vector{Float64} - vector with evaluation points
-#    nout  :: Int             - number of outputs
-# Output: 
-#    ders  :: Vector{Matrix{Float64}} - [B(u); B'(u); B''(u) ... ] where B(u) denote the vector of B-spline basis functions 
-#                                       evaluated at the vector of sites u    
 
+"""
+compute the collocation matrix and the matrices with 1st, 2nd,..., derivatives for the space of B-splines at a set of collocation points
 
-# compute the collocation matrix and the matrices with 1st, 2nd,..., derivatives for the space of B-splines at a set of collocation points
+## input:
+    p     :: Int             - polynomial degree
+    kts   :: Vector{Float64} - knotvector
+    u     :: Vector{Float64} - vector with evaluation points
+    nout  :: Int             - number of outputs
+
+## output:
+    ders  :: Vector{Matrix{Float64}} - [B(u); B'(u); B''(u) ... ] where B(u) denotes the vector of B-spline basis functions
+                                       evaluated at the vector of sites u
+"""
 function dersbsplinebasisfunsinterpolationmatrix(p::Int, kts::Vector{Float64}, u::Vector{Float64}, nout::Int)
-# input:
-#    p     :: Int             - polynomial degree
-#    kts   :: Vector{Float64} - knotvector
-#    u     :: Vector{Float64} - vector with evaluation points
-#    nout  :: Int             - number of outputs
-# Output: 
-#    ders  :: Vector{Matrix{Float64}} - [B(u); B'(u); B''(u) ... ] where B(u) denotes the vector of B-spline basis functions 
-#                                       evaluated at the vector of sites u
-
     # initialize
     n = dimsplinespace(p,kts)
     m = length(u)
-    
+
     # find span and compute basis functions and derivatives
     span = findspan(p, kts, u)
     Nu = dersbsplinebasisfuns(p, kts, span, u, nout)
@@ -315,7 +348,7 @@ function dersbsplinebasisfunsinterpolationmatrix(p::Int, kts::Vector{Float64}, u
     # indices sparse matrix format
     I = repmat(collect(1:m)',p+1,1)
     J = Int64[span[i]-p-1+j for j in 1:p+1, i in 1:m]
-    
+
     # return matrixes
     return [sparse(I[:],J[:],Nu[k]'[:],m,n) for k in 1:nout]
 end
